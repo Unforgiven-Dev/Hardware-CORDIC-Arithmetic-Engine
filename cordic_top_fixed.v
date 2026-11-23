@@ -1,0 +1,138 @@
+// =============================================================================
+//  Module     : cordic_top
+//  Description: Top-level CORDIC wrapper, 32-bit Q2.29, 20 iterations
+//
+//  ROTATION mode (mode = 0):
+//    Input  : z_in  = angle in radians (Q2.29), valid range [-pi, +pi]
+//    Output : x_out = cos(angle)    (Q2.29)
+//             y_out = sin(angle)    (Q2.29)
+//
+//  VECTORING mode (mode = 1):
+//    Input  : x_in, y_in = Cartesian coordinates (Q2.29), first quadrant
+//    Output : x_out = sqrt(x^2 + y^2) * (1/An)   -- scale by An~0.6073 for true magnitude
+//             z_out = atan2(y_in, x_in) in radians (Q2.29)
+//
+//  Latency    : ITER + 2 = 22 clock cycles (fully pipelined, 1 result/clock)
+//  Target     : >= 100 MHz on Intel/Xilinx FPGA (no multiplier required)
+//
+//  Q2.29 fixed-point format:
+//    bit[31]     = sign
+//    bits[30:29] = integer part (range: -4.0 to +3.999...)
+//    bits[28:0]  = fractional part
+//    Scale factor: 2^29 = 536870912
+//
+//  Key constants (Q2.29):
+//    An        = prod(cos(atan(2^-i)), i=0..19) = 0.60725293  -> 32'h136E9DB5
+//    1/An      =                                  1.64676026  -> 32'h34B24292
+//    pi/2      = 1.57079633                                   -> 32'h3243F6A9
+//    pi        = 3.14159265                                   -> 32'h6487ED51
+//    -pi/2     = -1.57079633                                  -> 32'hCDBC0957
+//
+//  Quadrant handling (ROTATION):
+//    CORDIC converges only for |z| <= pi/2.
+//    For angles in Q2 (pi/2 < z <= pi) or Q3 (-pi <= z < -pi/2):
+//      -> fold: z_folded = z -/+ pi  (maps into [-pi/2, pi/2])
+//      -> negate x_init: x_init = -An
+//    The sign of x_init propagates through the pipeline and automatically
+//    produces the correct signs of cos/sin for all four quadrants.
+//
+//  [FIX] Reset type corrected to synchronous (posedge clk or negedge rst_n).
+//  [FIX] Negative pi/2 comparison uses explicit NEG_PI_HALF localparam.
+// =============================================================================
+
+`timescale 1ns / 1ps
+
+module cordic_top #(
+    parameter N    = 32,   // word width (bits) 
+    parameter ITER = 20    // number of CORDIC iterations 
+)(
+    input  wire             clk,
+    input  wire             rst_n,      // active-low synchronous reset
+    input  wire             mode,       // 0 = ROTATION, 1 = VECTORING
+    input  wire             valid_in,
+    input  wire signed [N-1:0] x_in,   // Q2.29
+    input  wire signed [N-1:0] y_in,   // Q2.29
+    input  wire signed [N-1:0] z_in,   // Q2.29, angle input for ROTATION
+    output wire             valid_out,
+    output wire signed [N-1:0] x_out,  // Q2.29
+    output wire signed [N-1:0] y_out,  // Q2.29
+    output wire signed [N-1:0] z_out   // Q2.29
+);
+
+    // -------------------------------------------------------------------------
+    // Constants in Q2.29
+    // [FIX] Added NEG_PI_HALF as explicit localparam to avoid -$signed() warning
+    // -------------------------------------------------------------------------
+    localparam signed [N-1:0] AN_GAIN    = 32'h136E9DB5; // An   =  0.60725293
+    localparam signed [N-1:0] PI_HALF    = 32'h3243F6A9; // pi/2 =  1.57079633
+    localparam signed [N-1:0] NEG_PI_HALF= 32'hCDBC0957; // -pi/2= -1.57079633
+    localparam signed [N-1:0] PI         = 32'h6487ED51; // pi   =  3.14159265
+
+    // -------------------------------------------------------------------------
+    // Stage 1 register: pre-process inputs before sending to CORDIC core
+    //
+    //  ROTATION:
+    //    Normal (|z| <= pi/2)  : x_pre = +An, y_pre = 0, z_pre = z_in
+    //    Q2     (z > pi/2)     : x_pre = -An, y_pre = 0, z_pre = z_in - pi
+    //    Q3     (z < -pi/2)    : x_pre = -An, y_pre = 0, z_pre = z_in + pi
+    //
+    //  VECTORING:
+    //    x_pre = x_in, y_pre = y_in, z_pre = 0
+    // -------------------------------------------------------------------------
+    reg signed [N-1:0] x_pre, y_pre, z_pre;
+    reg                valid_pre;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            x_pre     <= {N{1'b0}};
+            y_pre     <= {N{1'b0}};
+            z_pre     <= {N{1'b0}};
+            valid_pre <= 1'b0;
+        end else begin
+            valid_pre <= valid_in;
+            if (mode == 1'b0) begin
+                // ------ ROTATION ------
+                if ($signed(z_in) > $signed(PI_HALF)) begin
+                    x_pre <= -$signed(AN_GAIN);          // Q2: negate x_init
+                    y_pre <= {N{1'b0}};
+                    z_pre <= $signed(z_in) - $signed(PI);
+                end else if ($signed(z_in) < $signed(NEG_PI_HALF)) begin
+                    // [FIX] Use NEG_PI_HALF localparam instead of -$signed(PI_HALF)
+                    x_pre <= -$signed(AN_GAIN);          // Q3: negate x_init
+                    y_pre <= {N{1'b0}};
+                    z_pre <= $signed(z_in) + $signed(PI);
+                end else begin
+                    x_pre <= AN_GAIN;                    // Q1/Q4: normal
+                    y_pre <= {N{1'b0}};
+                    z_pre <= z_in;
+                end
+            end else begin
+                // ------ VECTORING ------
+                x_pre <= x_in;
+                y_pre <= y_in;
+                z_pre <= {N{1'b0}};
+            end
+        end
+    end
+
+    // -------------------------------------------------------------------------
+    // CORDIC core instance
+    // -------------------------------------------------------------------------
+    cordic_core #(
+        .N   (N),
+        .ITER(ITER)
+    ) u_core (
+        .clk      (clk),
+        .rst_n    (rst_n),
+        .mode     (mode),
+        .valid_in (valid_pre),
+        .x_in     (x_pre),
+        .y_in     (y_pre),
+        .z_in     (z_pre),
+        .valid_out(valid_out),
+        .x_out    (x_out),
+        .y_out    (y_out),
+        .z_out    (z_out)
+    );
+
+endmodule

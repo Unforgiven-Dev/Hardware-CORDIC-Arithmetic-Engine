@@ -1,0 +1,65 @@
+m255
+K3
+13
+cModel Technology
+Z0 dD:\Hoctap\lab-thietkehethongsohdl\Doan\simulation\modelsim
+vcordic_core
+If1P_eKPo76GAY=mk@A>iS2
+VhlCz[>_g;Li>;i@5LeL[=2
+Z1 dD:\Hoctap\lab-thietkehethongsohdl\Doan\simulation\modelsim
+w1779021918
+8D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_core_fixed.v
+FD:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_core_fixed.v
+L0 33
+Z2 OV;L;10.1d;51
+r1
+31
+Z3 o-vlog01compat -work work -O0
+Z4 !s92 -vlog01compat -work work +incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan -O0
+!i10b 1
+!s100 oAiZ3HGY[ih7L[S]X@k[<0
+!s85 0
+!s108 1779413629.191000
+!s107 D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_core_fixed.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan|D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_core_fixed.v|
+!s101 -O0
+vcordic_tb
+!i10b 1
+!s100 a8kJG[=JKb]6[5Y_JIfO^0
+I2Cn1LddDSc_QJmg^Mg=W92
+VA6Ch^cToH7J@o2DXb92>M0
+R1
+w1779374024
+8D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v
+FD:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v
+L0 27
+R2
+r1
+!s85 0
+31
+!s108 1779413629.334000
+!s107 D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan|D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v|
+!s101 -O0
+R3
+R4
+vcordic_top
+ICQL6X^IfSeG_j>@iA[O@H1
+VRc`<]?DK]aiC^:jji;gIJ1
+R1
+w1779041115
+8D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_top_fixed.v
+FD:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_top_fixed.v
+L0 45
+R2
+r1
+31
+R3
+R4
+!i10b 1
+!s100 n2VN]T;mfL`?dZA<9_]211
+!s85 0
+!s108 1779413629.127000
+!s107 D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_top_fixed.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan|D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_top_fixed.v|
+!s101 -O0

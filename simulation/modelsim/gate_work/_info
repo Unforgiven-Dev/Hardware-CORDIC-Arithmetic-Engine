@@ -1,0 +1,45 @@
+m255
+K3
+13
+cModel Technology
+Z0 dD:\Hoctap\lab-thietkehethongsohdl\Doan\simulation\modelsim
+vcordic_tb
+!i10b 1
+!s100 a8kJG[=JKb]6[5Y_JIfO^0
+I2Cn1LddDSc_QJmg^Mg=W92
+VA6Ch^cToH7J@o2DXb92>M0
+Z1 dD:\Hoctap\lab-thietkehethongsohdl\Doan\simulation\modelsim
+w1779374024
+8D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v
+FD:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v
+L0 27
+Z2 OV;L;10.1d;51
+r1
+!s85 0
+31
+!s108 1779412456.344000
+!s107 D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan|D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v|
+!s101 -O0
+Z3 o-vlog01compat -work work -O0
+!s92 -vlog01compat -work work +incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan -O0
+vcordic_top
+I9G^D6BAN8@hBm4CX62I:M1
+V_FKe>9bVQM@^ZXdC6Ez]`3
+R1
+w1779384167
+8Cordic.vo
+FCordic.vo
+L0 31
+R2
+r1
+31
+R3
+!i10b 1
+!s100 0a_eiYMzQ5`1lm_LRJURC0
+!s85 0
+!s108 1779412455.891000
+!s107 Cordic.vo|
+!s90 -reportprogress|300|-vlog01compat|-work|work|+incdir+.|Cordic.vo|
+!s101 -O0
+!s92 -vlog01compat -work work +incdir+. -O0

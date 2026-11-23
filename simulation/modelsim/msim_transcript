@@ -1,0 +1,86 @@
+# Reading C:/altera/13.0sp1/modelsim_ase/tcl/vsim/pref.tcl 
+# ERROR: No extended dataflow license exists
+# do Cordic_run_msim_rtl_verilog.do 
+# if {[file exists rtl_work]} {
+# 	vdel -lib rtl_work -all
+# }
+# vlib rtl_work
+# vmap work rtl_work
+# Copying C:\altera\13.0sp1\modelsim_ase\win32aloem/../modelsim.ini to modelsim.ini
+# Modifying modelsim.ini
+# ** Warning: Copied C:\altera\13.0sp1\modelsim_ase\win32aloem/../modelsim.ini to modelsim.ini.
+#          Updated modelsim.ini.
+# 
+# vlog -vlog01compat -work work +incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan {D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_top_fixed.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module cordic_top
+# 
+# Top level modules:
+# 	cordic_top
+# vlog -vlog01compat -work work +incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan {D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_core_fixed.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module cordic_core
+# 
+# Top level modules:
+# 	cordic_core
+# 
+# vlog -vlog01compat -work work +incdir+D:/Hoctap/lab-thietkehethongsohdl/Doan {D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v}
+# Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+# -- Compiling module cordic_tb
+# 
+# Top level modules:
+# 	cordic_tb
+# 
+# vsim -t 1ps -L altera_ver -L lpm_ver -L sgate_ver -L altera_mf_ver -L altera_lnsim_ver -L cycloneii_ver -L rtl_work -L work -voptargs="+acc"  cordic_tb
+# vsim -L altera_ver -L lpm_ver -L sgate_ver -L altera_mf_ver -L altera_lnsim_ver -L cycloneii_ver -L rtl_work -L work -voptargs=\"+acc\" -t 1ps cordic_tb 
+# Loading work.cordic_tb
+# Loading work.cordic_top
+# Loading work.cordic_core
+# 
+# add wave *
+# view structure
+# .main_pane.structure.interior.cs.body.struct
+# view signals
+# .main_pane.objects.interior.cs.body.tree
+# run -all
+# 
+# ============================================================
+#   CORDIC Testbench  N=32  ITER=20  @100 MHz
+#   Tolerance = 5.000000e-004
+# ============================================================
+# 
+# --- ROTATION MODE ---
+# [PASS] ROT  0 deg    | x=1.000000(+-0.000000e+000) y=-0.000000(+-4.265457e-007) z=0.000000(+-4.302710e-007)
+# [PASS] ROT 30 deg    | x=0.866025(+-6.115901e-007) y=0.500001(+-1.059845e-006) z=-0.000001(+-1.220033e-006)
+# [PASS] ROT 45 deg    | x=0.707108(+-9.388261e-007) y=0.707106(+-1.374579e-006) z=0.000002(+-1.633540e-006)
+# [PASS] ROT 60 deg    | x=0.500001(+-1.059845e-006) y=0.866025(+-6.115901e-007) z=0.000001(+-1.220033e-006)
+# [PASS] ROT 90 deg    | x=-0.000000(+-4.265457e-007) y=1.000000(+-0.000000e+000) z=-0.000000(+-4.284084e-007)
+# [PASS] ROT -45 deg   | x=0.707106(+-1.372717e-006) y=-0.707108(+-9.406887e-007) z=0.000002(+-1.633540e-006)
+# [PASS] ROT 135 deg   | x=-0.707106(+-1.374579e-006) y=0.707108(+-9.369634e-007) z=0.000002(+-1.633540e-006)
+# [PASS] ROT -90 deg   | x=-0.000000(+-4.321337e-007) y=-1.000000(+-0.000000e+000) z=0.000000(+-4.284084e-007)
+# [PASS] ROT 0.1 rad   | x=0.995004(+-3.354183e-007) y=0.099832(+-1.314576e-006) z=0.000002(+-1.747161e-006)
+# [PASS] ROT 1.0 rad   | x=0.540301(+-1.051455e-006) y=0.841472(+-8.601853e-007) z=-0.000002(+-1.618639e-006)
+# [PASS] ROT -1.0 rad  | x=0.540301(+-1.057043e-006) y=-0.841472(+-8.601853e-007) z=0.000002(+-1.618639e-006)
+# 
+# --- VECTORING MODE ---
+# [PASS] VEC (1, 0)    | x=1.646760(+-8.154144e-009) y=0.000001(+-7.022172e-007) z=-0.000000(+-4.302710e-007)
+# [PASS] VEC (1, 1)    | x=2.328871(+-3.486131e-010) y=0.000004(+-3.818423e-006) z=0.785397(+-1.634036e-006)
+# [PASS] VEC (0, 1)    | x=1.646760(+-7.035632e-010) y=-0.000001(+-7.022172e-007) z=1.570797(+-4.292789e-007)
+# [PASS] VEC (0.6,0.8) | x=1.646760(+-8.154144e-009) y=0.000001(+-7.040799e-007) z=0.927295(+-2.111179e-007)
+# [PASS] VEC (cos30,s) | x=1.646760(+-6.291499e-009) y=-0.000002(+-2.011657e-006) z=0.523600(+-1.219702e-006)
+# [PASS] VEC (cos60,s) | x=1.646760(+-7.035632e-010) y=0.000002(+-2.011657e-006) z=1.047196(+-1.220694e-006)
+# [PASS] VEC (0.3,0.4) | x=0.823380(+-7.802362e-009) y=0.000000(+-3.501773e-007) z=0.927295(+-2.111179e-007)
+# 
+# ============================================================
+#   RESULTS:  PASS = 18   FAIL = 0
+# ============================================================
+# 
+# All tests PASSED. CORDIC core verified.
+# 
+# ** Note: $finish    : D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v(281)
+#    Time: 4635 ns  Iteration: 1  Instance: /cordic_tb
+# 1
+# Break in Module cordic_tb at D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v line 281
+# Simulation Breakpoint: 1
+# Break in Module cordic_tb at D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v line 281
+# MACRO ./Cordic_run_msim_rtl_verilog.do PAUSED at line 18

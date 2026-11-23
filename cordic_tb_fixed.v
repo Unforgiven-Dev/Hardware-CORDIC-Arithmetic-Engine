@@ -1,0 +1,293 @@
+// =============================================================================
+//  Module     : cordic_tb
+//  Description: Self-checking testbench for cordic_top
+//               18 test cases: 11 ROTATION + 7 VECTORING
+//               Compatible with ModelSim, Quartus II Simulator, Icarus Verilog
+//
+//  How to run in ModelSim:
+//    1. Create project, add cordic_core.v + cordic_top.v + cordic_tb.v
+//    2. Compile All
+//    3. Simulate -> cordic_tb
+//    4. run -all
+//
+//  How to run in Icarus Verilog (command line):
+//    iverilog -o cordic_sim cordic_core.v cordic_top.v cordic_tb.v
+//    vvp cordic_sim
+//
+//  Expected output: PASS=18  FAIL=0
+//
+//  [FIX] r2q function now uses nearest-integer rounding (+0.5 before $rtoi)
+//        to match Python's round() and avoid systematic 1-LSB bias.
+//  [FIX] check task uses @(posedge valid_out) with guard for already-high
+//        valid_out between consecutive test cases.
+// =============================================================================
+
+`timescale 1ns / 1ps
+
+module cordic_tb;
+
+    // -------------------------------------------------------------------------
+    // Parameters
+    // -------------------------------------------------------------------------
+    localparam N          = 32; //fix from parameter to localparam to test testbench
+    localparam ITER       = 20; //fix from parameter to localparam to test testbench
+    localparam CLK_PERIOD = 10;  // 10 ns = 100 MHz fix from parameter to localparam to test testbench
+
+    // -------------------------------------------------------------------------
+    // Q2.29 conversion helpers
+    // -------------------------------------------------------------------------
+    localparam real SCALE  = 536870912.0; // 2^29
+
+    function real q2r;
+        input signed [N-1:0] q;
+        begin
+            q2r = $itor($signed(q)) / SCALE;
+        end
+    endfunction
+
+    // [FIX] Use nearest-integer rounding (+0.5) instead of truncation ($rtoi)
+    // This avoids a systematic -0.5 LSB bias compared to Python's round().
+    function signed [N-1:0] r2q;
+        input real r;
+        begin
+            if (r >= 0.0)
+                r2q = $rtoi(r * SCALE + 0.5);
+            else
+                r2q = $rtoi(r * SCALE - 0.5);
+        end
+    endfunction
+
+    // -------------------------------------------------------------------------
+    // Reference constants
+    // -------------------------------------------------------------------------
+    localparam real TOL    = 5.0e-4;                // error tolerance (~20-bit)
+    localparam real PI     = 3.14159265358979;
+    localparam real PIHALF = 1.57079632679490;
+    localparam real SQ2    = 1.41421356237310;      // sqrt(2)
+    localparam real SQ3H   = 0.86602540378444;      // sqrt(3)/2
+    // CORDIC internal gain = 1/An ~ 1.6468
+    // ROTATION : output = cos/sin  (gain cancelled by x_init = An)
+    // VECTORING: x_out  = hypot(x,y) * (1/An),  multiply by An for true magnitude
+    localparam real INV_AN = 1.64676025812007;
+
+    // -------------------------------------------------------------------------
+    // DUT signals
+    // -------------------------------------------------------------------------
+    reg  clk, rst_n, mode, valid_in;
+    reg  signed [N-1:0] x_in, y_in, z_in;
+    wire valid_out;
+    wire signed [N-1:0] x_out, y_out, z_out;
+
+    // -------------------------------------------------------------------------
+    // DUT instantiation
+    // -------------------------------------------------------------------------
+    // comment để test cordic_top #(
+    //    .N   (N),
+    //    .ITER(ITER)
+    //) dut (
+	 cordic_top dut (
+        .clk      (clk),
+        .rst_n    (rst_n),
+        .mode     (mode),
+        .valid_in (valid_in),
+        .x_in     (x_in),
+        .y_in     (y_in),
+        .z_in     (z_in),
+        .valid_out(valid_out),
+        .x_out    (x_out),
+        .y_out    (y_out),
+        .z_out    (z_out)
+    );
+
+    // -------------------------------------------------------------------------
+    // Clock generation
+    // -------------------------------------------------------------------------
+    initial clk = 1'b0;
+    always #(CLK_PERIOD/2) clk = ~clk;
+
+    // -------------------------------------------------------------------------
+    // Test counters
+    // -------------------------------------------------------------------------
+    integer pass_cnt, fail_cnt;
+    real    got_x, got_y, got_z;
+    real    err_x, err_y, err_z;
+
+    // -------------------------------------------------------------------------
+    // Task: apply one stimulus (valid for 1 clock)
+    // -------------------------------------------------------------------------
+    task send;
+        input       i_mode;
+        input real  rx, ry, rz;
+        begin
+            @(negedge clk);
+            mode     = i_mode;
+            x_in     = r2q(rx);
+            y_in     = r2q(ry);
+            z_in     = r2q(rz);
+            valid_in = 1'b1;
+            @(negedge clk);
+            valid_in = 1'b0;
+        end
+    endtask
+
+    // -------------------------------------------------------------------------
+    // Task: wait for next valid output and compare against reference
+    // [FIX] Wait for valid_out to deassert first if it is already high,
+    //       then wait for the next rising edge. This prevents a consecutive
+    //       send/check pair from capturing the same output twice when the
+    //       pipeline latency is only 1 clock between sends.
+    // -------------------------------------------------------------------------
+    task check;
+        input [8*40-1:0] lbl;
+        input real       rx, ry, rz;
+        begin
+            if (valid_out) @(negedge valid_out);  // wait for current pulse to end
+            @(posedge valid_out);
+            @(negedge clk);         // sample after posedge to avoid race
+
+            got_x = q2r(x_out);
+            got_y = q2r(y_out);
+            got_z = q2r(z_out);
+
+            err_x = got_x - rx;  if (err_x < 0.0) err_x = -err_x;
+            err_y = got_y - ry;  if (err_y < 0.0) err_y = -err_y;
+            err_z = got_z - rz;  if (err_z < 0.0) err_z = -err_z;
+
+            if (err_x < TOL && err_y < TOL && err_z < TOL) begin
+                $display("[PASS] %0s | x=%f(+-%e) y=%f(+-%e) z=%f(+-%e)",
+                    lbl, got_x, err_x, got_y, err_y, got_z, err_z);
+                pass_cnt = pass_cnt + 1;
+            end else begin
+                $display("[FAIL] %0s", lbl);
+                $display("       ref  x=%f  y=%f  z=%f", rx, ry, rz);
+                $display("       got  x=%f  y=%f  z=%f", got_x, got_y, got_z);
+                $display("       err  x=%e  y=%e  z=%e  (tol=%e)",
+                    err_x, err_y, err_z, TOL);
+                fail_cnt = fail_cnt + 1;
+            end
+        end
+    endtask
+
+    // -------------------------------------------------------------------------
+    // Main test sequence
+    // -------------------------------------------------------------------------
+    initial begin
+        pass_cnt = 0;
+        fail_cnt = 0;
+
+        // Reset
+        rst_n    = 1'b0;
+        valid_in = 1'b0;
+        mode     = 1'b0;
+        x_in     = {N{1'b0}};
+        y_in     = {N{1'b0}};
+        z_in     = {N{1'b0}};
+        repeat(5) @(posedge clk);
+        rst_n = 1'b1;
+        repeat(3) @(posedge clk);
+
+        $display("");
+        $display("============================================================");
+        $display("  CORDIC Testbench  N=%0d  ITER=%0d  @%0d MHz",
+                  N, ITER, 1000/CLK_PERIOD);
+        $display("  Tolerance = %e", TOL);
+        $display("============================================================");
+
+        // ==============================================================
+        // ROTATION MODE: output x = cos(angle), y = sin(angle)
+        // ==============================================================
+        $display("");
+        $display("--- ROTATION MODE ---");
+
+        send(0, 0, 0,  0.0);
+        check("ROT  0 deg   ",  1.000000,  0.000000, 0.0);
+
+        send(0, 0, 0,  PI/6);
+        check("ROT 30 deg   ",  SQ3H,      0.500000, 0.0);
+
+        send(0, 0, 0,  PI/4);
+        check("ROT 45 deg   ",  0.707107,  0.707107, 0.0);
+
+        send(0, 0, 0,  PI/3);
+        check("ROT 60 deg   ",  0.500000,  SQ3H,     0.0);
+
+        send(0, 0, 0,  PIHALF);
+        check("ROT 90 deg   ",  0.000000,  1.000000, 0.0);
+
+        send(0, 0, 0, -PI/4);
+        check("ROT -45 deg  ",  0.707107, -0.707107, 0.0);
+
+        send(0, 0, 0,  3*PI/4);
+        check("ROT 135 deg  ", -0.707107,  0.707107, 0.0);
+
+        send(0, 0, 0, -PIHALF);
+        check("ROT -90 deg  ",  0.000000, -1.000000, 0.0);
+
+        send(0, 0, 0,  0.1);
+        check("ROT 0.1 rad  ",  0.995004,  0.099833, 0.0);
+
+        send(0, 0, 0,  1.0);
+        check("ROT 1.0 rad  ",  0.540302,  0.841471, 0.0);
+
+        send(0, 0, 0, -1.0);
+        check("ROT -1.0 rad ",  0.540302, -0.841471, 0.0);
+
+        // ==============================================================
+        // VECTORING MODE:
+        //   x_out = hypot(x,y) * (1/An)  [multiply by An for true mag]
+        //   z_out = atan2(y, x) in radians
+        // ==============================================================
+        $display("");
+        $display("--- VECTORING MODE ---");
+
+        send(1,  1.0,    0.0,   0);
+        check("VEC (1, 0)   ", 1.0*INV_AN, 0.0, 0.0);
+
+        send(1,  1.0,    1.0,   0);
+        check("VEC (1, 1)   ", SQ2*INV_AN, 0.0, PI/4);
+
+        send(1,  0.0,    1.0,   0);
+        check("VEC (0, 1)   ", 1.0*INV_AN, 0.0, PIHALF);
+
+        send(1,  0.6,    0.8,   0);
+        check("VEC (0.6,0.8)", 1.0*INV_AN, 0.0, 0.927295);
+
+        send(1,  SQ3H,   0.5,   0);
+        check("VEC (cos30,s)", 1.0*INV_AN, 0.0, PI/6);
+
+        send(1,  0.5,    SQ3H,  0);
+        check("VEC (cos60,s)", 1.0*INV_AN, 0.0, PI/3);
+
+        send(1,  0.3,    0.4,   0);
+        check("VEC (0.3,0.4)", 0.5*INV_AN, 0.0, 0.927295);
+
+        // ==============================================================
+        // Summary
+        // ==============================================================
+        repeat(ITER+5) @(posedge clk);
+
+        $display("");
+        $display("============================================================");
+        $display("  RESULTS:  PASS = %0d   FAIL = %0d", pass_cnt, fail_cnt);
+        $display("============================================================");
+        $display("");
+
+        if (fail_cnt == 0)
+            $display("All tests PASSED. CORDIC core verified.");
+        else
+            $display("FAILED: %0d test(s) did not meet tolerance.", fail_cnt);
+
+        $display("");
+        $finish;
+    end
+
+    // -------------------------------------------------------------------------
+    // Timeout watchdog (50 us)
+    // -------------------------------------------------------------------------
+    initial begin
+        #50000;
+        $display("[WATCHDOG] Simulation timeout at %0t", $time);
+        $finish;
+    end
+
+endmodule

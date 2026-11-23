@@ -1,0 +1,22 @@
+D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v {1 {vlog -work work D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_tb_fixed.v
+Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+-- Compiling module cordic_tb
+
+Top level modules:
+	cordic_tb
+
+} {} {}} D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_top_fixed.v {1 {vlog -work work D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_top_fixed.v
+Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+-- Compiling module cordic_top
+
+Top level modules:
+	cordic_top
+
+} {} {}} D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_core_fixed.v {1 {vlog -work work D:/Hoctap/lab-thietkehethongsohdl/Doan/cordic_core_fixed.v
+Model Technology ModelSim ALTERA vlog 10.1d Compiler 2012.11 Nov  2 2012
+-- Compiling module cordic_core
+
+Top level modules:
+	cordic_core
+
+} {} {}}
